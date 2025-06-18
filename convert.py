@@ -79,10 +79,7 @@ class Converter(nn.Module):
         self.gaussians = self.gs_renderer.load_ply(opt.test_path).to(self.device)
 
         # nerf renderer
-        if not self.opt.force_cuda_rast:
-            self.glctx = dr.RasterizeGLContext()
-        else:
-            self.glctx = dr.RasterizeCudaContext()
+        self.glctx = dr.RasterizeCudaContext()
         
         self.step = 0
         self.render_step_size = 5e-3
