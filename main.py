@@ -91,22 +91,24 @@ def main():
         total_psnr = 0
         for i, data in enumerate(train_dataloader):
             with accelerator.accumulate(model):
-
+                # Accumulate to simulate large batch training
                 optimizer.zero_grad()
 
-                step_ratio = (epoch + i / len(train_dataloader)) / opt.num_epochs
+                step_ratio = (epoch + i / len(train_dataloader)) / cfg.num_epochs
 
                 out = model(data, step_ratio)
                 loss = out['loss']
                 psnr = out['psnr']
+
                 accelerator.backward(loss)
 
-                # gradient clipping
+                # synchronize to update model  
                 if accelerator.sync_gradients:
-                    accelerator.clip_grad_norm_(model.parameters(), opt.gradient_clip)
+                    # gradient clipping to avoid exploding gradients
+                    accelerator.clip_grad_norm_(model.parameters(), cfg.gradient_clip)
 
-                optimizer.step()
-                scheduler.step()
+                    optimizer.step()    # Fixed to be inner if-block
+                    scheduler.step()    # Fixed to be inner if-block
 
                 total_loss += loss.detach()
                 total_psnr += psnr.detach()
